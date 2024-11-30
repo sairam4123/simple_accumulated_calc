@@ -2,8 +2,42 @@ use std::io;
 use fancy_regex::Regex;
 
 fn main() {
-    //simple_calculator();
-    accumulated_calculator();
+    println!("Choose a calculator to use:\n1. Accumulated Calculator\n2. Simple Calculator\n>");
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer).expect("Failed to read from stdin.");
+    let is_accumulated = buffer.trim().to_lowercase().starts_with("acc");
+    if is_accumulated {
+        accumulated_calculator();
+    } else {
+        simple_calculator();
+    }
+}
+
+fn calculation_kernel(op1: f32, op2: f32, op: &str) -> f32 {
+    match op {
+        "+" => op1 + op2,
+        "-" => op1 - op2,
+        "*" => op1 * op2,
+        "/" => {
+            if op2 == 0f32 {
+                println!("Division by zero is not possible.");
+                return -1f32;
+            }
+            op1 / op2
+        },
+        "^" => {
+            if op1 == 0f32 && op2 == 0f32 {
+                println!("0^0 is undefined.");
+                return -1f32;
+            }
+            op1.powf(op2)
+        },
+
+        op => {
+            println!("Unknown operator {op}.");
+            -1f32
+        }
+    }
 }
 
 fn accumulated_calculator() {
@@ -47,30 +81,7 @@ fn accumulated_calculator() {
                 }
             };
             
-            match *operator {
-                "+" => result += operand,
-                "-" => result -= operand,
-                "*" => result *= operand,
-                "/" => {
-                    if operand == 0f32 {
-                        println!("Division by zero is not possible.");
-                        return;
-                    }
-                    result /= operand
-                },
-                "^" => {
-                    if operand == 0f32 && result == 0f32 {
-                        println!("0^0 is undefined.");
-                        return;
-                    }
-                    result = result.powf(operand);
-                },
-                
-                op => {
-                    println!("Unknown operator {op}.");
-                    return;
-                }
-            }
+            result = calculation_kernel(result, operand, *operator);
             
         } else {
             println!("Malformed expression. Try again.")
@@ -94,10 +105,6 @@ fn simple_calculator() {
     io::stdin().read_line(&mut operator).expect("Must not be empty");
     let operator = operator.trim_end();
     assert_eq!(operator.len(), 1);
-    let res = match operator {
-        "+" => number + number2,
-        "-" => number - number2,
-        _ => { println!("Unknown operator"); -1 },
-    };
-    println!("Result: \n{}", res);
+    let result = calculation_kernel(number as f32, number2 as f32, operator);
+    println!("Result: \n{}", result);
 }
